@@ -1,12 +1,16 @@
 package study.datajpa.repository;
 
+import org.hibernate.annotations.common.reflection.XMember;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 
+import javax.persistence.Entity;
 import java.awt.print.Pageable;
 import java.util.Collection;
 import java.util.List;
@@ -38,6 +42,18 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query(value = "select m from Member m left join m.team",
             countQuery = "select count(m) from Member m")//totalcount용 쿼리르 따로 지정할 수 있음
     Page<Member> findByAge(int age, org.springframework.data.domain.Pageable pageable);
+
+    @Modifying(clearAutomatically = true) //executeUpdate와 같은 역활
+    @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
+    int bulkAgePlus(@Param("age") int age);
+
+//    @Query("select m from Member m left join fetch m.team")
+//    List<Member> findMemberFetchJoin();
+
+    @Override
+    @EntityGraph(attributePaths = {"team"}) //패치조인과 같이 한방 쿼리 나감
+    List<Member> findAll();
+
 
 }
 
