@@ -2,21 +2,20 @@ package study.datajpa.repository;
 
 import org.hibernate.annotations.common.reflection.XMember;
 import org.springframework.data.domain.Page;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 
 import javax.persistence.Entity;
+import javax.persistence.LockModeType;
+import javax.persistence.QueryHint;
 import java.awt.print.Pageable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
 
     List<Member> findByUsernameAndAgeGreaterThan(String username, int age);
 
@@ -54,6 +53,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @EntityGraph(attributePaths = {"team"}) //패치조인과 같이 한방 쿼리 나감
     List<Member> findAll();
 
+    @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value ="true")) //변경감지 기능을 끔으로써 read 기능을 최적화 한다.
+    Member findReadOnlyByUsername(String username);  //맨처음 부터 최적화를 하기는게 아니고 성능테스트를 해보고 써야함. -> 그리고 이걸 쓸 단계라면 redis를 사용하여 캐싱을 하는 것을 고려해볼 단계
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<Member> findLockByUsername(String username);
 }
 
